@@ -78,7 +78,7 @@ func (v *Verifier) Verify(ctx context.Context, signature []byte, opts notation.V
 	}
 
 	var desc notation.Descriptor
-	if err := cbor.Unmarshal(msg.Payload, desc); err != nil {
+	if err := cbor.Unmarshal(msg.Payload, &desc); err != nil {
 		return notation.Descriptor{}, err
 	}
 	return desc, nil
@@ -87,10 +87,19 @@ func (v *Verifier) Verify(ctx context.Context, signature []byte, opts notation.V
 // verifySigner verifies the signing identity and returns the verifier for
 //signature verification.
 func (v *Verifier) verifySigner(header map[interface{}]interface{}, sig []byte) (*cose.Verifier, error) {
-	certChain, _ := header["x5c"].([][]byte)
-	if len(certChain) == 0 {
+	rawCertChain, _ := header["x5c"].([]interface{})
+	if len(rawCertChain) == 0 {
 		return nil, errors.New("signer certificates not found")
 	}
+	certChain := make([][]byte, 0, len(rawCertChain))
+	for _, rawCert := range rawCertChain {
+		cert, ok := rawCert.([]byte)
+		if !ok {
+			return nil, errors.New("invalid signer certificate chain")
+		}
+		certChain = append(certChain, cert)
+	}
+
 	timestamp, _ := header["timestamp"].([]byte)
 	return v.verifySignerFromCertChain(certChain, timestamp, sig)
 }
@@ -173,7 +182,7 @@ func (v *Verifier) verifyCOSE(verifier *cose.Verifier, msg *cose.Sign1Message) e
 	}
 
 	// ensure required attributes exist.
-	if _, ok := header["iat"].(time.Time); !ok {
+	if _, ok := header["iat"].(int); !ok {
 		return errors.New("missing iat")
 	}
 	return nil
