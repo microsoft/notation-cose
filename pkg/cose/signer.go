@@ -122,7 +122,7 @@ func timestampSignature(ctx context.Context, sig []byte, tsa timestamp.Timestamp
 	tokenBytes := resp.TokenBytes()
 
 	// verify the timestamp signature
-	if _, err := verifyTimestamp(sig, tokenBytes, opts.Roots); err != nil {
+	if _, err := verifyTimestamp(sig, tokenBytes, opts); err != nil {
 		return nil, err
 	}
 
