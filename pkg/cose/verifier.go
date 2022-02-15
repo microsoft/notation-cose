@@ -3,6 +3,7 @@ package cose
 import (
 	"context"
 	"crypto/x509"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"time"
@@ -78,7 +79,7 @@ func (v *Verifier) Verify(ctx context.Context, signature []byte, opts notation.V
 	}
 
 	var desc notation.Descriptor
-	if err := cbor.Unmarshal(msg.Payload, &desc); err != nil {
+	if err := json.Unmarshal(msg.Payload, &desc); err != nil {
 		return notation.Descriptor{}, err
 	}
 	return desc, nil

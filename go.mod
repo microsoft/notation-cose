@@ -6,6 +6,7 @@ require (
 	github.com/fxamacker/cbor/v2 v2.2.1-0.20200429214022-fc263b46c618
 	github.com/notaryproject/notation-go-lib v0.0.0-20220214031612-1b9631b34681
 	github.com/opencontainers/go-digest v1.0.0
+	github.com/opencontainers/image-spec v1.0.2
 	github.com/urfave/cli/v2 v2.3.0
 	github.com/veraison/go-cose v0.0.0-20211126173600-dee3b3e54910
 )

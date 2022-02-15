@@ -5,12 +5,15 @@ import (
 	"crypto"
 	"crypto/rand"
 	"crypto/x509"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"time"
 
+	"github.com/fxamacker/cbor/v2"
 	"github.com/notaryproject/notation-go-lib"
 	"github.com/notaryproject/notation-go-lib/crypto/timestamp"
+	ocispec "github.com/opencontainers/image-spec/specs-go/v1"
 	"github.com/veraison/go-cose"
 )
 
@@ -71,15 +74,15 @@ func (s *Signer) Sign(ctx context.Context, desc notation.Descriptor, opts notati
 
 	// generate COSE signature
 	msg := cose.NewSign1Message()
-	payload, err := generatePayload(desc)
+	payload, err := json.Marshal(desc)
 	if err != nil {
 		return nil, err
 	}
 	msg.Payload = payload
 	msg.Headers.Protected = map[interface{}]interface{}{
-		1:     s.base.GetAlg().Value,    // alg
-		2:     []interface{}{3},         // crit
-		3:     MediaTypeNotationPayload, // cty
+		1:     s.base.GetAlg().Value,       // alg
+		2:     []interface{}{3},            // crit
+		3:     ocispec.MediaTypeDescriptor, // cty
 		"iat": time.Now().Unix(),
 	}
 	if !opts.Expiry.IsZero() {
@@ -102,7 +105,7 @@ func (s *Signer) Sign(ctx context.Context, desc notation.Descriptor, opts notati
 	}
 
 	// encode in CBOR
-	return cborEncMode.Marshal(msg)
+	return cbor.Marshal(msg)
 }
 
 // timestampSignature sends a request to the TSA for timestamping the signature.
