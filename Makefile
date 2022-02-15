@@ -52,4 +52,5 @@ install: install-notation-cose ## install the notation plugins
 
 .PHONY: install-notation-cose
 install-notation-cose: bin/notation-cose ## installs the notation cose plugin
+	mkdir -p ~/.config/notation/plugins/cose
 	cp $< ~/.config/notation/plugins/cose/notation-cose
