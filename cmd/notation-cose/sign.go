@@ -1,9 +1,16 @@
 package main
 
 import (
+	"crypto/tls"
 	"encoding/json"
 	"errors"
+	"os"
+	"strings"
 
+	"github.com/notaryproject/notation-go-lib"
+	"github.com/notaryproject/notation-go-lib/crypto/cryptoutil"
+	"github.com/notaryproject/notation-go-lib/crypto/timestamp"
+	"github.com/shizhMSFT/notation-cose/pkg/cose"
 	"github.com/shizhMSFT/notation-cose/pkg/protocol"
 	"github.com/urfave/cli/v2"
 )
@@ -29,7 +36,68 @@ func runSign(ctx *cli.Context) error {
 	}
 
 	// sign artifact
+	signer, opts, err := getSignerWithOptions(req.KMSProfile.ID, req.SignOptions)
+	if err != nil {
+		return err
+	}
+	sig, err := signer.Sign(ctx.Context, req.Descriptor, opts)
+	if err != nil {
+		return err
+	}
 
 	// write response
-	return nil
+	_, err = os.Stdout.Write(sig)
+	return err
+}
+
+func getSignerWithOptions(keyInfo string, opts notation.SignOptions) (notation.Signer, notation.SignOptions, error) {
+	// parse options
+	items := strings.SplitN(keyInfo, ":", 3)
+	if len(items) < 2 {
+		return nil, opts, errors.New("missing signing key pair")
+	}
+	keyPath := items[0]
+	certPath := items[1]
+	var tsEndpoint string
+	if len(items) > 2 {
+		tsEndpoint = items[2]
+	}
+
+	// read key / cert pair
+	keyPEM, err := os.ReadFile(keyPath)
+	if err != nil {
+		return nil, opts, err
+	}
+	certPEM, err := os.ReadFile(certPath)
+	if err != nil {
+		return nil, opts, err
+	}
+	keyPair, err := tls.X509KeyPair(certPEM, keyPEM)
+	if err != nil {
+		return nil, opts, err
+	}
+
+	// parse cert
+	certs, err := cryptoutil.ParseCertificatePEM(certPEM)
+	if err != nil {
+		return nil, opts, err
+	}
+
+	// construct signer
+	signer, err := cose.NewSigner(keyPair.PrivateKey, certs)
+	if err != nil {
+		return nil, opts, err
+	}
+
+	// hack: refine options
+	// notation#feat-kv-extensibility uses an older version of notation-go-lib,
+	// which does not support TSA in options.
+	if tsEndpoint != "" {
+		tsa, err := timestamp.NewHTTPTimestamper(nil, tsEndpoint)
+		if err != nil {
+			return nil, opts, err
+		}
+		opts.TSA = tsa
+	}
+	return signer, opts, nil
 }

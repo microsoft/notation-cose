@@ -34,7 +34,7 @@ func runVerify(ctx *cli.Context) error {
 	}
 
 	// verify signature
-	verifier, err := getVerifier(req.KMSProfile)
+	verifier, err := getVerifier(req.KMSProfile.ID)
 	if err != nil {
 		return err
 	}
@@ -52,8 +52,8 @@ func runVerify(ctx *cli.Context) error {
 	return err
 }
 
-func getVerifier(profile protocol.KMSProfileSuite) (notation.Verifier, error) {
-	bundledCerts, err := cryptoutil.ReadCertificateFile(profile.ID)
+func getVerifier(certPath string) (notation.Verifier, error) {
+	bundledCerts, err := cryptoutil.ReadCertificateFile(certPath)
 	if err != nil {
 		return nil, err
 	}
