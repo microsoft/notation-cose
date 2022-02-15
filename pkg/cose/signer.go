@@ -80,10 +80,10 @@ func (s *Signer) Sign(ctx context.Context, desc notation.Descriptor, opts notati
 		1:     s.base.GetAlg().Value,    // alg
 		2:     []interface{}{3},         // crit
 		3:     MediaTypeNotationPayload, // cty
-		"iat": time.Now().UTC(),
+		"iat": time.Now().Unix(),
 	}
 	if !opts.Expiry.IsZero() {
-		msg.Headers.Protected["exp"] = opts.Expiry.UTC()
+		msg.Headers.Protected["exp"] = opts.Expiry.Unix()
 	}
 	if err := msg.Sign(rand.Reader, nil, *s.base); err != nil {
 		return nil, err

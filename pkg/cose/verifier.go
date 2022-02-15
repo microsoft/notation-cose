@@ -181,9 +181,30 @@ func (v *Verifier) verifyCOSE(verifier *cose.Verifier, msg *cose.Sign1Message) e
 		return err
 	}
 
-	// ensure required attributes exist.
-	if _, ok := header["iat"].(int); !ok {
+	// verify attributes
+	var issuedAt time.Time
+	if value, ok := header["iat"]; !ok {
 		return errors.New("missing iat")
+	} else if unix, ok := value.(int); !ok {
+		return errors.New("invalid iat")
+	} else {
+		issuedAt = time.Unix(int64(unix), 0)
+	}
+	now := time.Now()
+	if issuedAt.After(now) {
+		return errors.New("signature used before generated")
+	}
+
+	if value, ok := header["exp"]; ok {
+		unix, ok := value.(int)
+		if !ok {
+			return errors.New("invalid exp")
+		}
+		expiresAt := time.Unix(int64(unix), 0)
+		if !now.Before(expiresAt) {
+			delta := now.Sub(expiresAt)
+			return fmt.Errorf("signature is expired by %v", delta)
+		}
 	}
 	return nil
 }
