@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/fxamacker/cbor/v2"
 	"github.com/notaryproject/notation-go-lib"
 	"github.com/notaryproject/notation-go-lib/crypto/timestamp"
 	artifactspec "github.com/oras-project/artifacts-spec/specs-go/v1"
@@ -105,7 +104,7 @@ func (s *Signer) Sign(ctx context.Context, desc notation.Descriptor, opts notati
 	}
 
 	// encode in CBOR
-	return cbor.Marshal(msg)
+	return cose.Marshal(msg)
 }
 
 // timestampSignature sends a request to the TSA for timestamping the signature.
