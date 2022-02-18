@@ -13,7 +13,7 @@ import (
 	"github.com/fxamacker/cbor/v2"
 	"github.com/notaryproject/notation-go-lib"
 	"github.com/notaryproject/notation-go-lib/crypto/timestamp"
-	ocispec "github.com/opencontainers/image-spec/specs-go/v1"
+	artifactspec "github.com/oras-project/artifacts-spec/specs-go/v1"
 	"github.com/veraison/go-cose"
 )
 
@@ -80,9 +80,9 @@ func (s *Signer) Sign(ctx context.Context, desc notation.Descriptor, opts notati
 	}
 	msg.Payload = payload
 	msg.Headers.Protected = map[interface{}]interface{}{
-		1:     s.base.GetAlg().Value,       // alg
-		2:     []interface{}{3},            // crit
-		3:     ocispec.MediaTypeDescriptor, // cty
+		1:     s.base.GetAlg().Value,            // alg
+		2:     []interface{}{3},                 // crit
+		3:     artifactspec.MediaTypeDescriptor, // cty
 		"iat": time.Now().Unix(),
 	}
 	if !opts.Expiry.IsZero() {
