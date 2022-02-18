@@ -35,7 +35,7 @@ type Verifier struct {
 	// The `Intermediates` in the verify options will be ignored and
 	// re-contrusted using the certificates in the incoming signature.
 	// An empty list of `KeyUsages` in the verify options implies
-	// `ExtKeyUsageCodeSigning`.
+	// `ExtKeyUsageAny`.
 	VerifyOptions x509.VerifyOptions
 
 	// TSAVerifyOptions is the verify option to verify the fetched timestamp
@@ -126,7 +126,7 @@ func (v *Verifier) verifySignerFromCertChain(certChain [][]byte, timeStampToken,
 	verifyOpts := v.VerifyOptions
 	verifyOpts.Intermediates = intermediates
 	if len(verifyOpts.KeyUsages) == 0 {
-		verifyOpts.KeyUsages = []x509.ExtKeyUsage{x509.ExtKeyUsageCodeSigning}
+		verifyOpts.KeyUsages = []x509.ExtKeyUsage{x509.ExtKeyUsageAny}
 	}
 
 	// verify the signing certificate
