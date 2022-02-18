@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"strings"
+	"time"
 )
 
 func print(indent int, r io.Reader, width int, prefix string) error {
@@ -50,7 +51,7 @@ func print(indent int, r io.Reader, width int, prefix string) error {
 			}
 		}
 	case 6:
-		return printTag(indent, r, content, count)
+		return printTag(indent, r, content, count, prefix)
 	default:
 		return fmt.Errorf("major type %d is not supported", majorType)
 	}
@@ -82,14 +83,18 @@ func printString(indent int, r io.Reader, count uint64) error {
 	return nil
 }
 
-func printTag(indent int, r io.Reader, content []byte, tag uint64) error {
+func printTag(indent int, r io.Reader, content []byte, tag uint64, prefix string) error {
+	desc := fmt.Sprintf("%sTag %d", prefix, tag)
 	switch tag {
+	case 1:
+		desc += ": datetime"
+		println(indent, content, 0, desc)
+		return printDateTime(indent, r)
 	case 18:
-		desc := fmt.Sprintf("Tag %d: cose-sign1", tag)
+		desc += ": cose-sign1"
 		println(indent, content, 0, desc)
 		return printCOSESign1(indent, r)
 	default:
-		desc := fmt.Sprintf("Tag %d", tag)
 		println(indent, content, 0, desc)
 		return print(indent, r, 0, "")
 	}
@@ -115,7 +120,7 @@ func printCOSESign1(indent int, r io.Reader) error {
 	if majorType != 2 {
 		return fmt.Errorf("invalid protected header: %v", content)
 	}
-	desc = fmt.Sprintf("protectd: Binary string: %d bytes", count)
+	desc = fmt.Sprintf("protected: Binary string: %d bytes", count)
 	println(indent, content, 0, desc)
 	if err := print(indent+1, r, 0, ""); err != nil {
 		return err
@@ -136,6 +141,21 @@ func printCOSESign1(indent int, r io.Reader) error {
 		return err
 	}
 
+	return nil
+}
+
+func printDateTime(indent int, r io.Reader) error {
+	majorType, count, content, err := readHeader(r)
+	if err != nil {
+		return err
+	}
+	if majorType != 0 {
+		return fmt.Errorf("datetime type %d not supported", majorType)
+	}
+
+	t := time.Unix(int64(count), 0).UTC()
+	desc := fmt.Sprintf("UNIX epoch: %d -> %s", count, t.Format(time.RFC3339))
+	println(indent, content, 0, desc)
 	return nil
 }
 
