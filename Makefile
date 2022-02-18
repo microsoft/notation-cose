@@ -54,3 +54,9 @@ install: install-notation-cose ## install the notation plugins
 install-notation-cose: bin/notation-cose ## installs the notation cose plugin
 	mkdir -p ~/.config/notation/plugins/cose
 	cp $< ~/.config/notation/plugins/cose/notation-cose
+
+.PHONY: build-tools ## builds tools
+build-tools: bin/tools/cq
+
+bin/tools/cq: tools/cq FORCE
+	go build $(GO_BUILD_FLAGS) -o $@ ./$<
