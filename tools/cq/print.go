@@ -19,7 +19,7 @@ func print(indent int, r io.Reader, width int, prefix string) error {
 	case 0, 1:
 		n := int64(count)
 		if majorType == 1 {
-			n = -n
+			n = -1 - n
 		}
 		desc := fmt.Sprintf("Integer: %d", n)
 		println(indent, content, width, prefix+desc)
