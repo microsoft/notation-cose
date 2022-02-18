@@ -79,10 +79,10 @@ func (s *Signer) Sign(ctx context.Context, desc notation.Descriptor, opts notati
 	}
 	msg.Payload = payload
 	msg.Headers.Protected = map[interface{}]interface{}{
-		1:     s.base.GetAlg().Value,            // alg
-		2:     []interface{}{3},                 // crit
-		3:     artifactspec.MediaTypeDescriptor, // cty
-		"iat": time.Now().Unix(),
+		1:             s.base.GetAlg().Value,            // alg
+		2:             []interface{}{3},                 // crit
+		3:             artifactspec.MediaTypeDescriptor, // cty
+		"signingtime": time.Now(),
 	}
 	if !opts.Expiry.IsZero() {
 		msg.Headers.Protected["exp"] = opts.Expiry.Unix()
@@ -92,7 +92,7 @@ func (s *Signer) Sign(ctx context.Context, desc notation.Descriptor, opts notati
 	}
 
 	// generate unprotected header
-	msg.Headers.Unprotected["x5c"] = s.certChain
+	msg.Headers.Unprotected[33] = s.certChain
 
 	// timestamp signature
 	if opts.TSA != nil {

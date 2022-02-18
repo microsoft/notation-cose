@@ -88,7 +88,7 @@ func (v *Verifier) Verify(ctx context.Context, signature []byte, opts notation.V
 // verifySigner verifies the signing identity and returns the verifier for
 //signature verification.
 func (v *Verifier) verifySigner(header map[interface{}]interface{}, sig []byte) (*cose.Verifier, error) {
-	rawCertChain, _ := header["x5c"].([]interface{})
+	rawCertChain, _ := header[33].([]interface{})
 	if len(rawCertChain) == 0 {
 		return nil, errors.New("signer certificates not found")
 	}
@@ -184,10 +184,10 @@ func (v *Verifier) verifyCOSE(verifier *cose.Verifier, msg *cose.Sign1Message) e
 
 	// verify attributes
 	var issuedAt time.Time
-	if value, ok := header["iat"]; !ok {
-		return errors.New("missing iat")
+	if value, ok := header["signingtime"]; !ok {
+		return errors.New("missing signingtime")
 	} else if unix, ok := value.(int); !ok {
-		return errors.New("invalid iat")
+		return errors.New("invalid signingtime")
 	} else {
 		issuedAt = time.Unix(int64(unix), 0)
 	}
