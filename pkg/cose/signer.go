@@ -88,7 +88,7 @@ func (s *Signer) Sign(ctx context.Context, desc notation.Descriptor, opts notati
 	if !opts.Expiry.IsZero() {
 		msg.Headers.Protected["exp"] = opts.Expiry.Unix()
 	}
-	if err := msg.Sign(rand.Reader, nil, *s.base); err != nil {
+	if err := msg.Sign(rand.Reader, []byte{}, *s.base); err != nil {
 		return nil, err
 	}
 

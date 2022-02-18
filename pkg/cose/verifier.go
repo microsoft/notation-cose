@@ -70,7 +70,7 @@ func (v *Verifier) Verify(ctx context.Context, signature []byte, opts notation.V
 	}
 
 	// verify COSE signature
-	if err := v.verifyCOSE(verifier, msg); err != nil {
+	if err := verifyCOSE(verifier, msg, signature); err != nil {
 		return notation.Descriptor{}, err
 	}
 
@@ -173,27 +173,32 @@ func (v *Verifier) verifyTimestamp(tokenBytes, sig []byte) (time.Time, error) {
 }
 
 // verifyCOSE verifies the COSE signature against the specified verifier.
-func (v *Verifier) verifyCOSE(verifier *cose.Verifier, msg *cose.Sign1Message) error {
+func verifyCOSE(verifier *cose.Verifier, msg *cose.Sign1Message, rawSig []byte) error {
 	// verify signature
 	header := msg.Headers.Protected
 	if alg := header[1]; alg != verifier.Alg.Value {
 		return fmt.Errorf("unexpected signing algorithm: %v: require %v %s", alg, verifier.Alg.Value, verifier.Alg.Name)
 	}
-	if err := msg.Verify(nil, *verifier); err != nil {
+	if err := verifySignature(verifier, rawSig); err != nil {
 		return err
 	}
 
 	// verify attributes
-	var issuedAt time.Time
-	if value, ok := header["signingtime"]; !ok {
+	var signingTime time.Time
+	signingTimeValue, ok := header["signingtime"]
+	if !ok {
 		return errors.New("missing signingtime")
-	} else if unix, ok := value.(int); !ok {
+	}
+	switch value := signingTimeValue.(type) {
+	case int:
+		signingTime = time.Unix(int64(value), 0)
+	case time.Time:
+		signingTime = value
+	default:
 		return errors.New("invalid signingtime")
-	} else {
-		issuedAt = time.Unix(int64(unix), 0)
 	}
 	now := time.Now()
-	if issuedAt.After(now) {
+	if signingTime.After(now) {
 		return errors.New("signature used before generated")
 	}
 
@@ -209,6 +214,49 @@ func (v *Verifier) verifyCOSE(verifier *cose.Verifier, msg *cose.Sign1Message) e
 		}
 	}
 	return nil
+}
+
+// verifySignature verifies the primitive signature in COSE against the
+// specified verifier.
+// Note: go-cose re-serialize the protected header, causing message digest is
+// not proper computed. Therefore, we calculate message digest without go-cose.
+func verifySignature(verifier *cose.Verifier, sig []byte) error {
+	// create a Sig_structure object and populate it with the appropriate fields
+	sign1msg := struct {
+		_           struct{} `cbor:",toarray"`
+		Protected   []byte
+		Unprotected interface{}
+		Payload     []byte
+		Signature   []byte
+	}{}
+	if err := cbor.Unmarshal(sig, &sign1msg); err != nil {
+		return err
+	}
+	sigStruct := []interface{}{
+		"Signature1",
+		sign1msg.Protected,
+		[]byte{}, // zero length for nil (RFC 8152 4.4)
+		sign1msg.Payload,
+	}
+
+	// create the value ToBeSigned by encoding the Sig_structure to a byte
+	// string.
+	toBeSigned, err := cose.Marshal(sigStruct)
+	if err != nil {
+		return err
+	}
+
+	// call the signature verification algorithm.
+	hash := verifier.Alg.HashFunc
+	if !hash.Available() {
+		return cose.ErrUnavailableHashFunc
+	}
+	h := hash.New()
+	if _, err := h.Write(toBeSigned); err != nil {
+		return err
+	}
+	digest := h.Sum(nil)
+	return verifier.Verify(digest, sign1msg.Signature)
 }
 
 // verifyTimestamp verifies the timestamp token and returns stamped time.

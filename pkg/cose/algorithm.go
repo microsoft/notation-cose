@@ -21,12 +21,9 @@ func AlgorithmFromKey(key interface{}) (*cose.Algorithm, error) {
 
 	switch key := key.(type) {
 	case *rsa.PublicKey:
-		switch key.Size() {
-		case 256:
-			return cose.PS256, nil
-		default:
-			return nil, errors.New("rsa key not supported")
-		}
+		// use PS256 for all key sizes since PS256 is the only supported
+		// algorithm by go-cose.
+		return cose.PS256, nil
 	case *ecdsa.PublicKey:
 		switch key.Curve.Params().BitSize {
 		case 256:
