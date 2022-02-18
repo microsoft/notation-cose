@@ -64,11 +64,7 @@ func (v *Verifier) Verify(ctx context.Context, signature []byte, opts notation.V
 	}
 
 	// verify signing identity
-	headers := msg.Headers
-	if headers == nil {
-		return notation.Descriptor{}, errors.New("missing signature headers")
-	}
-	verifier, err := v.verifySigner(headers.Unprotected, msg.Signature)
+	verifier, err := v.verifySigner(msg)
 	if err != nil {
 		return notation.Descriptor{}, err
 	}
@@ -87,8 +83,13 @@ func (v *Verifier) Verify(ctx context.Context, signature []byte, opts notation.V
 
 // verifySigner verifies the signing identity and returns the verifier for
 //signature verification.
-func (v *Verifier) verifySigner(header map[interface{}]interface{}, sig []byte) (*cose.Verifier, error) {
-	rawCertChain, _ := header[33].([]interface{})
+func (v *Verifier) verifySigner(msg *cose.Sign1Message) (*cose.Verifier, error) {
+	headers := msg.Headers
+	if headers == nil {
+		return nil, errors.New("missing signature headers")
+	}
+
+	rawCertChain, _ := headers.Protected[33].([]interface{})
 	if len(rawCertChain) == 0 {
 		return nil, errors.New("signer certificates not found")
 	}
@@ -101,8 +102,8 @@ func (v *Verifier) verifySigner(header map[interface{}]interface{}, sig []byte) 
 		certChain = append(certChain, cert)
 	}
 
-	timestamp, _ := header["timestamp"].([]byte)
-	return v.verifySignerFromCertChain(certChain, timestamp, sig)
+	timestamp, _ := headers.Unprotected["timestamp"].([]byte)
+	return v.verifySignerFromCertChain(certChain, timestamp, msg.Signature)
 }
 
 // verifySignerFromCertChain verifies the signing identity from the provided

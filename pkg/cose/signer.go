@@ -82,6 +82,7 @@ func (s *Signer) Sign(ctx context.Context, desc notation.Descriptor, opts notati
 		1:             s.base.GetAlg().Value,            // alg
 		2:             []interface{}{3},                 // crit
 		3:             artifactspec.MediaTypeDescriptor, // cty
+		33:            s.certChain,                      // x5chain
 		"signingtime": time.Now(),
 	}
 	if !opts.Expiry.IsZero() {
@@ -90,9 +91,6 @@ func (s *Signer) Sign(ctx context.Context, desc notation.Descriptor, opts notati
 	if err := msg.Sign(rand.Reader, nil, *s.base); err != nil {
 		return nil, err
 	}
-
-	// generate unprotected header
-	msg.Headers.Unprotected[33] = s.certChain
 
 	// timestamp signature
 	if opts.TSA != nil {
