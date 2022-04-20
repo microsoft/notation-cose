@@ -7,11 +7,11 @@ import (
 	"os"
 	"strings"
 
+	"github.com/microsoft/notation-cose/pkg/cose"
+	"github.com/microsoft/notation-cose/pkg/protocol"
 	"github.com/notaryproject/notation-go-lib"
 	"github.com/notaryproject/notation-go-lib/crypto/cryptoutil"
 	"github.com/notaryproject/notation-go-lib/crypto/timestamp"
-	"github.com/shizhMSFT/notation-cose/pkg/cose"
-	"github.com/shizhMSFT/notation-cose/pkg/protocol"
 	"github.com/urfave/cli/v2"
 )
 

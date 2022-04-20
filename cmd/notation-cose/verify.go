@@ -6,10 +6,10 @@ import (
 	"errors"
 	"os"
 
+	"github.com/microsoft/notation-cose/pkg/cose"
+	"github.com/microsoft/notation-cose/pkg/protocol"
 	"github.com/notaryproject/notation-go-lib"
 	"github.com/notaryproject/notation-go-lib/crypto/cryptoutil"
-	"github.com/shizhMSFT/notation-cose/pkg/cose"
-	"github.com/shizhMSFT/notation-cose/pkg/protocol"
 	"github.com/urfave/cli/v2"
 )
 

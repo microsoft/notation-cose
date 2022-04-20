@@ -3,7 +3,7 @@ package main
 import (
 	"os"
 
-	"github.com/shizhMSFT/notation-cose/internal/version"
+	"github.com/microsoft/notation-cose/internal/version"
 	"github.com/urfave/cli/v2"
 )
 
