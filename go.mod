@@ -1,4 +1,4 @@
-module github.com/shizhMSFT/notation-cose
+module github.com/microsoft/notation-cose
 
 go 1.17
 

@@ -1,5 +1,5 @@
 # referenced from https://github.com/notaryproject/notation/blob/main/Makefile
-MODULE         = github.com/shizhMSFT/notation-cose
+MODULE         = github.com/microsoft/notation-cose
 COMMANDS       = notation-cose
 GIT_TAG        = $(shell git describe --tags --abbrev=0 --exact-match 2>/dev/null)
 BUILD_METADATA =
