@@ -7,8 +7,8 @@ github.com/notaryproject/notation-go-lib v0.0.0-20220214031612-1b9631b34681 h1:y
 github.com/notaryproject/notation-go-lib v0.0.0-20220214031612-1b9631b34681/go.mod h1:lQcnTNXR+rhNJY8nYQ5OWihh5mBDnoBAfYP0HQC8jEw=
 github.com/opencontainers/go-digest v1.0.0 h1:apOUWs51W5PlhuyGyz9FCeeBIOUDA/6nW8Oi/yOhh5U=
 github.com/opencontainers/go-digest v1.0.0/go.mod h1:0JzlMkj0TRzQZfJkVvzbP0HBR3IKzErnv2BNG4W4MAM=
-github.com/oras-project/artifacts-spec v0.0.0-20220226030613-b469ef86bd0b h1:7527DSVoMm7PAN6A+83UDPlHj4IB7I3bFW1rIqf6cvs=
-github.com/oras-project/artifacts-spec v0.0.0-20220226030613-b469ef86bd0b/go.mod h1:Xch2aLzSwtkhbFFN6LUzTfLtukYvMMdXJ4oZ8O7BOdc=
+github.com/oras-project/artifacts-spec v1.0.0-rc.1 h1:bCHf9mPbrgiNwQFyVzBX79BYZVAl0OUrmvICZOCOwts=
+github.com/oras-project/artifacts-spec v1.0.0-rc.1/go.mod h1:Xch2aLzSwtkhbFFN6LUzTfLtukYvMMdXJ4oZ8O7BOdc=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/russross/blackfriday/v2 v2.0.1 h1:lPqVAte+HuHNfhJ/0LC98ESWRz8afy9tM/0RK8m9o+Q=

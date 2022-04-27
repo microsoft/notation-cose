@@ -5,7 +5,7 @@ go 1.18
 require (
 	github.com/notaryproject/notation-go-lib v0.0.0-20220214031612-1b9631b34681
 	github.com/opencontainers/go-digest v1.0.0
-	github.com/oras-project/artifacts-spec v0.0.0-20220226030613-b469ef86bd0b
+	github.com/oras-project/artifacts-spec v1.0.0-rc.1
 	github.com/urfave/cli/v2 v2.3.0
 	github.com/veraison/go-cose v0.0.0-20220425074922-8cef769ef52c
 )
