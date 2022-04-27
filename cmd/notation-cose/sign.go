@@ -1,6 +1,7 @@
 package main
 
 import (
+	"crypto"
 	"crypto/tls"
 	"encoding/json"
 	"errors"
@@ -84,7 +85,11 @@ func getSignerWithOptions(keyInfo string, opts notation.SignOptions) (notation.S
 	}
 
 	// construct signer
-	signer, err := cose.NewSigner(keyPair.PrivateKey, certs)
+	privateKey, ok := keyPair.PrivateKey.(crypto.Signer)
+	if !ok {
+		return nil, opts, errors.New("unsupported private key")
+	}
+	signer, err := cose.NewSigner(privateKey, certs)
 	if err != nil {
 		return nil, opts, err
 	}

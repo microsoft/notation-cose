@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/fxamacker/cbor/v2"
 	"github.com/notaryproject/notation-go-lib"
 	"github.com/notaryproject/notation-go-lib/crypto/timestamp"
 	"github.com/veraison/go-cose"
@@ -23,7 +22,7 @@ type Verifier struct {
 	// signature according to the public key in the certificate chain.
 	// If not present, `AlgorithmFromKey` will be used to pick up a recommended
 	// algorithm.
-	ResolveAlgorithm func(interface{}) (*cose.Algorithm, error)
+	ResolveAlgorithm func(interface{}) (cose.Algorithm, error)
 
 	// EnforceExpiryValidation enforces the verifier to verify the timestamp
 	// signature even if the certificate is valid.
@@ -59,7 +58,7 @@ func NewVerifier() *Verifier {
 func (v *Verifier) Verify(ctx context.Context, signature []byte, opts notation.VerifyOptions) (notation.Descriptor, error) {
 	// unpack envelope
 	msg := &cose.Sign1Message{}
-	if err := cbor.Unmarshal(signature, msg); err != nil {
+	if err := msg.UnmarshalCBOR(signature); err != nil {
 		return notation.Descriptor{}, err
 	}
 
@@ -69,8 +68,8 @@ func (v *Verifier) Verify(ctx context.Context, signature []byte, opts notation.V
 		return notation.Descriptor{}, err
 	}
 
-	// verify COSE signature
-	if err := verifyCOSE(verifier, msg, signature); err != nil {
+	// verify COSE message
+	if err := verifyMessage(verifier, msg); err != nil {
 		return notation.Descriptor{}, err
 	}
 
@@ -83,13 +82,8 @@ func (v *Verifier) Verify(ctx context.Context, signature []byte, opts notation.V
 
 // verifySigner verifies the signing identity and returns the verifier for
 //signature verification.
-func (v *Verifier) verifySigner(msg *cose.Sign1Message) (*cose.Verifier, error) {
-	headers := msg.Headers
-	if headers == nil {
-		return nil, errors.New("missing signature headers")
-	}
-
-	rawCertChain, _ := headers.Protected[33].([]interface{})
+func (v *Verifier) verifySigner(msg *cose.Sign1Message) (cose.Verifier, error) {
+	rawCertChain, _ := msg.Headers.Protected[cose.HeaderLabelX5Chain].([]interface{})
 	if len(rawCertChain) == 0 {
 		return nil, errors.New("signer certificates not found")
 	}
@@ -102,14 +96,14 @@ func (v *Verifier) verifySigner(msg *cose.Sign1Message) (*cose.Verifier, error) 
 		certChain = append(certChain, cert)
 	}
 
-	timestamp, _ := headers.Unprotected["timestamp"].([]byte)
+	timestamp, _ := msg.Headers.Unprotected["timestamp"].([]byte)
 	return v.verifySignerFromCertChain(certChain, timestamp, msg.Signature)
 }
 
 // verifySignerFromCertChain verifies the signing identity from the provided
 // certificate chain and returns the verifier. The first certificate of the
 // certificate chain contains the key, which used to sign the artifact.
-func (v *Verifier) verifySignerFromCertChain(certChain [][]byte, timeStampToken, sig []byte) (*cose.Verifier, error) {
+func (v *Verifier) verifySignerFromCertChain(certChain [][]byte, timeStampToken, sig []byte) (cose.Verifier, error) {
 	// prepare for certificate verification
 	certs := make([]*x509.Certificate, 0, len(certChain))
 	for _, certBytes := range certChain {
@@ -160,11 +154,7 @@ func (v *Verifier) verifySignerFromCertChain(certChain [][]byte, timeStampToken,
 	if err != nil {
 		return nil, err
 	}
-
-	return &cose.Verifier{
-		PublicKey: cert.PublicKey,
-		Alg:       alg,
-	}, nil
+	return cose.NewVerifier(alg, cert.PublicKey)
 }
 
 // verifyTimestamp verifies the timestamp token and returns stamped time.
@@ -172,26 +162,23 @@ func (v *Verifier) verifyTimestamp(tokenBytes, sig []byte) (time.Time, error) {
 	return verifyTimestamp(sig, tokenBytes, v.TSAVerifyOptions)
 }
 
-// verifyCOSE verifies the COSE signature against the specified verifier.
-func verifyCOSE(verifier *cose.Verifier, msg *cose.Sign1Message, rawSig []byte) error {
+// verifyMessage verifies the COSE message against the specified verifier.
+func verifyMessage(verifier cose.Verifier, msg *cose.Sign1Message) error {
 	// verify signature
-	header := msg.Headers.Protected
-	if alg := header[1]; alg != verifier.Alg.Value {
-		return fmt.Errorf("unexpected signing algorithm: %v: require %v %s", alg, verifier.Alg.Value, verifier.Alg.Name)
-	}
-	if err := verifySignature(verifier, rawSig); err != nil {
+	if err := msg.Verify(nil, verifier); err != nil {
 		return err
 	}
 
 	// verify attributes
-	var signingTime time.Time
+	header := msg.Headers.Protected
 	signingTimeValue, ok := header["signingtime"]
 	if !ok {
 		return errors.New("missing signingtime")
 	}
+	var signingTime time.Time
 	switch value := signingTimeValue.(type) {
-	case int:
-		signingTime = time.Unix(int64(value), 0)
+	case int64:
+		signingTime = time.Unix(value, 0)
 	case time.Time:
 		signingTime = value
 	default:
@@ -203,60 +190,17 @@ func verifyCOSE(verifier *cose.Verifier, msg *cose.Sign1Message, rawSig []byte) 
 	}
 
 	if value, ok := header["exp"]; ok {
-		unix, ok := value.(int)
+		unix, ok := value.(int64)
 		if !ok {
 			return errors.New("invalid exp")
 		}
-		expiresAt := time.Unix(int64(unix), 0)
+		expiresAt := time.Unix(unix, 0)
 		if !now.Before(expiresAt) {
 			delta := now.Sub(expiresAt)
 			return fmt.Errorf("signature is expired by %v", delta)
 		}
 	}
 	return nil
-}
-
-// verifySignature verifies the primitive signature in COSE against the
-// specified verifier.
-// Note: go-cose re-serialize the protected header, causing message digest is
-// not proper computed. Therefore, we calculate message digest without go-cose.
-func verifySignature(verifier *cose.Verifier, sig []byte) error {
-	// create a Sig_structure object and populate it with the appropriate fields
-	sign1msg := struct {
-		_           struct{} `cbor:",toarray"`
-		Protected   []byte
-		Unprotected interface{}
-		Payload     []byte
-		Signature   []byte
-	}{}
-	if err := cbor.Unmarshal(sig, &sign1msg); err != nil {
-		return err
-	}
-	sigStruct := []interface{}{
-		"Signature1",
-		sign1msg.Protected,
-		[]byte{}, // zero length for nil (RFC 8152 4.4)
-		sign1msg.Payload,
-	}
-
-	// create the value ToBeSigned by encoding the Sig_structure to a byte
-	// string.
-	toBeSigned, err := cose.Marshal(sigStruct)
-	if err != nil {
-		return err
-	}
-
-	// call the signature verification algorithm.
-	hash := verifier.Alg.HashFunc
-	if !hash.Available() {
-		return cose.ErrUnavailableHashFunc
-	}
-	h := hash.New()
-	if _, err := h.Write(toBeSigned); err != nil {
-		return err
-	}
-	digest := h.Sum(nil)
-	return verifier.Verify(digest, sign1msg.Signature)
 }
 
 // verifyTimestamp verifies the timestamp token and returns stamped time.
