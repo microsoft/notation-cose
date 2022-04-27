@@ -2,8 +2,8 @@ github.com/cpuguy83/go-md2man/v2 v2.0.1 h1:r/myEWzV9lfsM1tFLgDyu0atFtJ1fXn261LKY
 github.com/cpuguy83/go-md2man/v2 v2.0.1/go.mod h1:tgQtvFlXSQOSOSIRvRPT7W67SCa46tRHOmNcaadrF8o=
 github.com/fxamacker/cbor/v2 v2.4.0 h1:ri0ArlOR+5XunOP8CRUowT0pSJOwhW098ZCUyskZD88=
 github.com/fxamacker/cbor/v2 v2.4.0/go.mod h1:TA1xS00nchWmaBnEIxPSE5oHLuJBAVvqrtAnWBwBCVo=
-github.com/notaryproject/notation-go v0.0.0-20220422005131-96df588f2f6d h1:tlikeEwAPRWlcOYdOklH8vUwDME5inC17aKIIeRDWzM=
-github.com/notaryproject/notation-go v0.0.0-20220422005131-96df588f2f6d/go.mod h1:B/JbgikwvLoD9gFeWYhFtxIEozRoFAs9q31mj3vz1i4=
+github.com/notaryproject/notation-go v0.8.0-alpha.1 h1:YbrmzZiEdK2/XSqwkT0/qvACiJGy7AXSaMbzbQc2RmI=
+github.com/notaryproject/notation-go v0.8.0-alpha.1/go.mod h1:B/JbgikwvLoD9gFeWYhFtxIEozRoFAs9q31mj3vz1i4=
 github.com/opencontainers/go-digest v1.0.0 h1:apOUWs51W5PlhuyGyz9FCeeBIOUDA/6nW8Oi/yOhh5U=
 github.com/opencontainers/go-digest v1.0.0/go.mod h1:0JzlMkj0TRzQZfJkVvzbP0HBR3IKzErnv2BNG4W4MAM=
 github.com/oras-project/artifacts-spec v1.0.0-rc.1 h1:bCHf9mPbrgiNwQFyVzBX79BYZVAl0OUrmvICZOCOwts=

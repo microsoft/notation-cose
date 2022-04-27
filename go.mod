@@ -3,7 +3,7 @@ module github.com/microsoft/notation-cose
 go 1.18
 
 require (
-	github.com/notaryproject/notation-go v0.0.0-20220422005131-96df588f2f6d
+	github.com/notaryproject/notation-go v0.8.0-alpha.1
 	github.com/opencontainers/go-digest v1.0.0
 	github.com/oras-project/artifacts-spec v1.0.0-rc.1
 	github.com/urfave/cli/v2 v2.5.0
