@@ -154,6 +154,7 @@ func (v *Verifier) verifySignerFromCertChain(certChain [][]byte, timeStampToken,
 	if err != nil {
 		return nil, err
 	}
+
 	return cose.NewVerifier(alg, cert.PublicKey)
 }
 
