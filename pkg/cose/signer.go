@@ -10,8 +10,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/notaryproject/notation-go-lib"
-	"github.com/notaryproject/notation-go-lib/crypto/timestamp"
+	"github.com/notaryproject/notation-go"
+	"github.com/notaryproject/notation-go/crypto/timestamp"
 	artifactspec "github.com/oras-project/artifacts-spec/specs-go/v1"
 	"github.com/veraison/go-cose"
 )
@@ -19,7 +19,7 @@ import (
 // Signer signs artifacts and generates COSE signatures.
 type Signer struct {
 	// base is the base COSE signer
-	base *cose.Signer
+	base cose.Signer
 
 	// certChain contains the X.509 public key certificate or certificate chain
 	// corresponding to the key used to generate the signature.
@@ -28,7 +28,7 @@ type Signer struct {
 
 // NewSigner creates a signer with the recommended signing algorithm and a
 // signing key bundled with a certificate chain.
-func NewSigner(key crypto.PrivateKey, certChain []*x509.Certificate) (*Signer, error) {
+func NewSigner(key crypto.Signer, certChain []*x509.Certificate) (*Signer, error) {
 	alg, err := AlgorithmFromKey(key)
 	if err != nil {
 		return nil, err
@@ -38,10 +38,7 @@ func NewSigner(key crypto.PrivateKey, certChain []*x509.Certificate) (*Signer, e
 
 // NewSignerWithCertificateChain creates a signer with the specified signing
 // algorithm and a signing key bundled with a (partial) certificate chain.
-func NewSignerWithCertificateChain(alg *cose.Algorithm, key crypto.PrivateKey, certChain []*x509.Certificate) (*Signer, error) {
-	if alg == nil {
-		return nil, errors.New("nil signing algorithm")
-	}
+func NewSignerWithCertificateChain(alg cose.Algorithm, key crypto.Signer, certChain []*x509.Certificate) (*Signer, error) {
 	if key == nil {
 		return nil, errors.New("nil signing key")
 	}
@@ -49,7 +46,7 @@ func NewSignerWithCertificateChain(alg *cose.Algorithm, key crypto.PrivateKey, c
 		return nil, errors.New("missing signer certificate chain")
 	}
 
-	base, err := cose.NewSignerFromKey(alg, key)
+	base, err := cose.NewSigner(alg, key)
 	if err != nil {
 		return nil, err
 	}
@@ -78,17 +75,19 @@ func (s *Signer) Sign(ctx context.Context, desc notation.Descriptor, opts notati
 		return nil, err
 	}
 	msg.Payload = payload
-	msg.Headers.Protected = map[interface{}]interface{}{
-		1:             s.base.GetAlg().Value,            // alg
-		2:             []interface{}{3},                 // crit
-		3:             artifactspec.MediaTypeDescriptor, // cty
-		33:            s.certChain,                      // x5chain
-		"signingtime": time.Now(),
+	msg.Headers.Protected = cose.ProtectedHeader{
+		cose.HeaderLabelAlgorithm: s.base.Algorithm(),
+		cose.HeaderLabelCritical: []interface{}{
+			cose.HeaderLabelContentType,
+		},
+		cose.HeaderLabelContentType: artifactspec.MediaTypeDescriptor,
+		cose.HeaderLabelX5Chain:     s.certChain,
+		"signingtime":               time.Now(),
 	}
 	if !opts.Expiry.IsZero() {
 		msg.Headers.Protected["exp"] = opts.Expiry.Unix()
 	}
-	if err := msg.Sign(rand.Reader, []byte{}, *s.base); err != nil {
+	if err := msg.Sign(rand.Reader, nil, s.base); err != nil {
 		return nil, err
 	}
 
@@ -102,7 +101,7 @@ func (s *Signer) Sign(ctx context.Context, desc notation.Descriptor, opts notati
 	}
 
 	// encode in CBOR
-	return cose.Marshal(msg)
+	return msg.MarshalCBOR()
 }
 
 // timestampSignature sends a request to the TSA for timestamping the signature.

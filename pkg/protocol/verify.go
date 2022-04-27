@@ -1,6 +1,6 @@
 package protocol
 
-import "github.com/notaryproject/notation-go-lib"
+import "github.com/notaryproject/notation-go"
 
 // VerifyRequest is the request to verify a signature.
 type VerifyRequest struct {

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"crypto"
 	"crypto/tls"
 	"encoding/json"
 	"errors"
@@ -9,9 +10,9 @@ import (
 
 	"github.com/microsoft/notation-cose/pkg/cose"
 	"github.com/microsoft/notation-cose/pkg/protocol"
-	"github.com/notaryproject/notation-go-lib"
-	"github.com/notaryproject/notation-go-lib/crypto/cryptoutil"
-	"github.com/notaryproject/notation-go-lib/crypto/timestamp"
+	"github.com/notaryproject/notation-go"
+	"github.com/notaryproject/notation-go/crypto/cryptoutil"
+	"github.com/notaryproject/notation-go/crypto/timestamp"
 	"github.com/urfave/cli/v2"
 )
 
@@ -84,7 +85,11 @@ func getSignerWithOptions(keyInfo string, opts notation.SignOptions) (notation.S
 	}
 
 	// construct signer
-	signer, err := cose.NewSigner(keyPair.PrivateKey, certs)
+	privateKey, ok := keyPair.PrivateKey.(crypto.Signer)
+	if !ok {
+		return nil, opts, errors.New("unsupported private key")
+	}
+	signer, err := cose.NewSigner(privateKey, certs)
 	if err != nil {
 		return nil, opts, err
 	}
