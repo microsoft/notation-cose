@@ -8,8 +8,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/notaryproject/notation-go-lib"
-	"github.com/notaryproject/notation-go-lib/crypto/timestamp"
+	"github.com/notaryproject/notation-go"
+	"github.com/notaryproject/notation-go/crypto/timestamp"
 	"github.com/veraison/go-cose"
 )
 

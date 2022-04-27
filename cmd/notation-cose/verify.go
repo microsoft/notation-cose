@@ -8,8 +8,8 @@ import (
 
 	"github.com/microsoft/notation-cose/pkg/cose"
 	"github.com/microsoft/notation-cose/pkg/protocol"
-	"github.com/notaryproject/notation-go-lib"
-	"github.com/notaryproject/notation-go-lib/crypto/cryptoutil"
+	"github.com/notaryproject/notation-go"
+	"github.com/notaryproject/notation-go/crypto/cryptoutil"
 	"github.com/urfave/cli/v2"
 )
 

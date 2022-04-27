@@ -1,6 +1,6 @@
 package protocol
 
-import "github.com/notaryproject/notation-go-lib"
+import "github.com/notaryproject/notation-go"
 
 // SignRequest is the request to sign artifacts
 type SignRequest struct {
