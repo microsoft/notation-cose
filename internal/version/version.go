@@ -2,7 +2,7 @@ package version
 
 var (
 	// Version shows the current notation-cose version, optionally with pre-release.
-	Version = "v0.2.0-alpha.1"
+	Version = "v0.3.0-alpha.1"
 
 	// BuildMetadata stores the build metadata.
 	BuildMetadata = "unreleased"
